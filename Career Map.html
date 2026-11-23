@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Career Map</title>
+<style>
+:root{color-scheme:light;--bg:#f7f5f0;--line:#2a3342;--dim:#6f7886;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--line);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--bg)}
+.bar{position:fixed;top:env(safe-area-inset-top,0px);left:0;right:0;z-index:20;display:flex;gap:8px;align-items:center;padding:10px 12px;background:rgba(247,245,240,.92);backdrop-filter:blur(8px)}
+.bar b{flex:1;font-size:15px}
+.bar button{background:none;color:var(--line);border:1.5px solid var(--line);border-radius:10px;padding:7px 12px;font-size:14px}
+#save.dirty{background:#2a3342;color:#fff}
+#msg{font-size:12px;color:var(--dim)}
+.wrap{position:absolute;inset:56px 0 0;overflow:auto}
+#cv{position:relative;width:1100px;height:1600px}
+.box{position:absolute;border:2px solid var(--bd);border-radius:16px;background:var(--bg-c);box-shadow:0 4px 14px rgba(40,50,70,.10);padding:8px 10px 10px;direction:ltr}
+.hd{display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(0,0,0,.12);padding-bottom:6px;margin-bottom:6px}
+.ti{flex:1;font-size:20px;font-weight:700;outline:none;min-width:0}
+.grip,.ig{cursor:grab;touch-action:none;color:var(--dim);user-select:none;padding:2px 6px;font-size:18px}
+ul{list-style:none;margin:0;padding:0;min-height:24px}
+li{display:flex;align-items:center;gap:4px;padding:3px 0}
+.it{flex:1;outline:none;font-size:16px;min-width:0;word-break:break-word}
+.x{background:none;border:0;color:var(--dim);font-size:14px;padding:4px 6px}
+.add{width:100%;margin-top:6px;background:none;border:1px dashed rgba(0,0,0,.28);color:var(--dim);border-radius:8px;padding:6px;font-size:14px}
+.ghost{position:fixed;z-index:50;pointer-events:none;background:#fff;border:1px solid var(--line);border-radius:8px;padding:4px 10px;direction:ltr}
+.box.over{box-shadow:0 0 0 3px var(--bd),0 8px 22px rgba(40,50,70,.2)}
+.ro .grip,.ro .ig,.ro .x,.ro .add,.ro .edit{display:none}
+</style>
+<style>artifact-sync,artifact-local{display:contents}</style><style>artifact-sync,artifact-local{display:contents}</style></head>
+<body class="ro">
+<div class="bar"><b>Career Map</b><span id="msg"></span><button id="addBox" class="edit">+ باکس</button><button id="save" class="edit">ذخیره</button></div>
+<div class="wrap"><div id="cv"></div></div>
+<script type="application/json" id="state">[{"id":"a1","title":"CV","x":20,"y":20,"w":240,"c":0,"items":[{"id":"a11","t":"Report"},{"id":"a12","t":"AI"},{"id":"a13","t":"Passion"},{"id":"a14","t":"Teamwork"},{"id":"a15","t":"Branding"},{"id":"a16","t":"Narrator"}]},{"id":"b1","title":"PR","x":290,"y":20,"w":260,"c":1,"items":[{"id":"b11","t":"Media Relation"},{"id":"b12","t":"Content writer (Copywriter)"},{"id":"b13","t":"Event manager"},{"id":"b14","t":"Crisis management"},{"id":"b15","t":"Social listening"},{"id":"b16","t":"Social media Specialist"},{"id":"b17","t":"Internal Communication Spc"},{"id":"b18","t":"Multimedia Spc"},{"id":"b19","t":"Corporate Relations"},{"id":"b20","t":"Exhibition / Fair"},{"id":"b21","t":"Influencer marketing"},{"id":"b22","t":"Press Kit"},{"id":"b23","t":"CSR"}]},{"id":"c1","title":"Skills & Tools","x":20,"y":330,"w":240,"c":2,"items":[{"id":"c11","t":"Community Builder"},{"id":"c12","t":"Adobe II"},{"id":"c13","t":"PS"},{"id":"c14","t":"ICDL"},{"id":"c15","t":"Gamification"},{"id":"c16","t":"Advertise"},{"id":"c17","t":"MarCom"},{"id":"c18","t":"WordPress"},{"id":"c19","t":"Printing"},{"id":"c20","t":"Campaign mng"}]},{"id":"d1","title":"باکس ۴","x":580,"y":20,"w":240,"c":3,"items":[]}]</script>
+<script>
+const PAL=[['#ffd9e0','#f2a9b8'],['#d6ecff','#9ccbf0'],['#d9f4dc','#9fd7a6'],['#fff2c4','#e8d17f'],['#e7dcff','#bfa8ee'],['#ffe2cc','#f0b88f']];
+const cv=document.getElementById('cv'),msgEl=document.getElementById('msg'),saveBtn=document.getElementById('save');
+const uid=()=>Math.random().toString(36).slice(2,8);
+let S=JSON.parse(document.getElementById('state').textContent),EDIT=false;
+const msg=t=>{msgEl.textContent=t};
+const dirty=()=>{saveBtn.classList.add('dirty');msg('ذخیره نشده')};
+const esc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const find=id=>S.find(b=>b.id===id);
+function render(){
+const ce=EDIT?' contenteditable="plaintext-only"':'';
+cv.innerHTML='';
+S.forEach(b=>{
+const e=document.createElement('div');e.className='box';e.dataset.id=b.id;
+e.style.left=b.x+'px';e.style.top=b.y+'px';e.style.width=b.w+'px';
+const p=PAL[(b.c||0)%PAL.length];e.style.setProperty('--bg-c',p[0]);e.style.setProperty('--bd',p[1]);
+e.innerHTML='<div class="hd"><span class="grip">⠿</span><div class="ti"'+ce+'>'+esc(b.title)+'</div><button class="x" data-a="color">●</button><button class="x" data-a="delbox">✕</button></div><ul></ul><button class="add" data-a="add">+ افزودن</button>';
+const ul=e.querySelector('ul');
+b.items.forEach(i=>{const li=document.createElement('li');li.dataset.id=i.id;
+li.innerHTML='<span class="ig">⠿</span><span class="it"'+ce+'>'+esc(i.t)+'</span><button class="x" data-a="del">✕</button>';ul.append(li)});
+cv.append(e)});
+}
+cv.addEventListener('input',e=>{
+const box=e.target.closest('.box');if(!box)return;const b=find(box.dataset.id);
+if(e.target.classList.contains('ti'))b.title=e.target.textContent;
+else if(e.target.classList.contains('it')){const li=e.target.closest('li');b.items.find(i=>i.id===li.dataset.id).t=e.target.textContent}
+dirty()});
+cv.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur()}});
+cv.addEventListener('click',e=>{
+if(!EDIT)return;
+const a=e.target.dataset.a;if(!a)return;
+const box=e.target.closest('.box'),b=find(box.dataset.id);
+if(a==='color'){b.c=((b.c||0)+1)%PAL.length}
+else if(a==='delbox'){S=S.filter(x=>x!==b)}
+else if(a==='del'){const id=e.target.closest('li').dataset.id;b.items=b.items.filter(i=>i.id!==id)}
+else if(a==='add'){b.items.push({id:uid(),t:'مورد جدید'});dirty();render();
+const its=cv.querySelector('.box[data-id="'+b.id+'"] li:last-child .it');if(its){its.focus();document.getSelection().selectAllChildren(its)}return}
+dirty();render()});
+cv.addEventListener('pointerdown',e=>{
+if(!EDIT)return;
+const g=e.target.closest('.grip,.ig');if(!g)return;
+e.preventDefault();
+const box=g.closest('.box'),b=find(box.dataset.id);
+if(g.classList.contains('grip')){
+const sx=e.clientX-b.x,sy=e.clientY-b.y;
+const mv=ev=>{b.x=Math.max(0,ev.clientX-sx);b.y=Math.max(0,ev.clientY-sy);box.style.left=b.x+'px';box.style.top=b.y+'px'};
+const up=()=>{removeEventListener('pointermove',mv);removeEventListener('pointerup',up);dirty()};
+addEventListener('pointermove',mv);addEventListener('pointerup',up);return}
+const li=g.closest('li'),item=b.items.find(i=>i.id===li.dataset.id);
+const gh=document.createElement('div');gh.className='ghost';gh.textContent=item.t;document.body.append(gh);
+const pos=ev=>{gh.style.left=ev.clientX+8+'px';gh.style.top=ev.clientY-10+'px';
+document.querySelectorAll('.over').forEach(o=>o.classList.remove('over'));
+const t=document.elementFromPoint(ev.clientX,ev.clientY);const tb=t&&t.closest('.box');if(tb)tb.classList.add('over')};
+pos(e);
+const up=ev=>{removeEventListener('pointermove',pos);removeEventListener('pointerup',up);gh.remove();
+const t=document.elementFromPoint(ev.clientX,ev.clientY);const tb=t&&t.closest('.box');
+if(tb){const tgt=find(tb.dataset.id);const tli=t.closest('li');
+b.items=b.items.filter(i=>i!==item);
+let idx=tgt.items.length;if(tli){idx=tgt.items.findIndex(i=>i.id===tli.dataset.id)}
+tgt.items.splice(idx,0,item);dirty()}
+render()};
+addEventListener('pointermove',pos);addEventListener('pointerup',up)});
+document.getElementById('addBox').onclick=()=>{
+const w=document.querySelector('.wrap');
+S.push({id:uid(),title:'باکس جدید',x:w.scrollLeft+30,y:w.scrollTop+30,w:240,c:S.length%PAL.length,items:[]});dirty();render()};
+saveBtn.onclick=async()=>{
+try{
+const a=await claude.use('artifact');if(!a){msg('ذخیره ممکن نیست');return}
+const c=document.documentElement.cloneNode(true);
+c.querySelector('#cv').innerHTML='';
+c.querySelector('#state').textContent=JSON.stringify(S).replace(/</g,'\\u003c');
+c.querySelectorAll('.ghost,.over').forEach(x=>x.remove());
+c.querySelector('body').className='ro';
+c.querySelector('#msg').textContent='';
+c.querySelector('#save').className='edit';
+msg('در حال ذخیره…');
+await a.publish('<!DOCTYPE html>\n'+c.outerHTML);
+}catch(err){msg(err&&err.code==='conflict'?'نسخه‌ی دیگری ذخیره شده بود':'ذخیره نشد')}};
+render();
+(async()=>{
+try{
+if(!(window.claude&&claude.use))return;
+const u=await claude.use('user');
+if(u&&await u.canEdit()){EDIT=true;document.body.classList.remove('ro');render()}
+}catch(e){}
+})();
+</script>
+
+
+</body></html>
